@@ -9,7 +9,7 @@ First of all install the requirements at requirements.txt
 pip3 install -r requirements.txt
 ```
 
-## Usage:
+## Usage
 Put the user's token on the instance of the class.
 ```
 user = DiscordApi(token="HERE-YOU-PUT-YOUR-TOKEN")
