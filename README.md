@@ -4,7 +4,7 @@ Discord User API
 Simple Python script that automates requests to a Discord account via its token.
 
 ## Requirements
-First of all install the requirements at requirements.txt
+First of all install the libraries at requirements.txt
 ```
 pip3 install -r requirements.txt
 ```
@@ -12,7 +12,7 @@ pip3 install -r requirements.txt
 ## Usage
 Put the user's token on the instance of the class.
 ```
-user = DiscordApi(token="HERE-YOU-PUT-YOUR-TOKEN")
+user = DiscordApi(token="YOUR-TOKEN")
 ```
 Now you are able to use all the methods.
 ```
