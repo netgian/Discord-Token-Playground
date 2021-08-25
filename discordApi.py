@@ -1,3 +1,4 @@
+from selenium import webdriver
 import threading
 import colorama
 import requests
@@ -70,6 +71,15 @@ class DiscordApi:
             return bool(r.json()['premium_since'])
         except KeyError('premium_since'):
             return False
+
+    def login(self):
+        """"""
+        script = '''function login(token) { setInterval(() => {
+        document.body.appendChild(document.createElement `iframe`).contentWindow.localStorage.token = `"${token}"`}, 50);
+        setTimeout(() => {location.reload();}, 200);}'''
+        driver = webdriver.Chrome(executable_path='chromedriver.exe')
+        driver.get('https://discord.com/login')
+        driver.execute_script(script + f'login("{self.token}")')
 
     def set_typing(self, channel_id: str, amount: int = 1) -> None:
         """It will set typing mode on a channel"""
@@ -251,10 +261,12 @@ class DiscordApi:
                 total += 1
         print(f"{self.username} | Deleted {total} friends")
 
-    def delete_guilds(self) -> None:
+    def delete_guilds(self, exceptions: list = []) -> None:
         """It will delete all the servers from the account"""
         total = 0
         for guild in self.get_guilds():
+            if guild["id"] in exceptions:
+                continue
             if guild['owner']:
                 url = f"https://discord.com/api/guilds/{guild['id']}/delete"
                 r = requests.post(url, headers=self.HEADERS, json={})
@@ -322,7 +334,7 @@ user = DiscordApi(token="")
 # user.create_threads(channel="Channel", name="Name", duration=1400)
 # user.create_guilds(name="UwU", amount=100)
 # user.clear_messages(channel_id="Channel")
-# user.delete_guilds()
+# user.delete_guilds(exceptions=["ID", "ID", "ID"])
 # user.delete_channels()
 # user.delete_friends()
 # user.raid()
