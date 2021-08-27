@@ -72,15 +72,6 @@ class DiscordApi:
         except KeyError('premium_since'):
             return False
 
-    def login(self):
-        """"""
-        script = '''function login(token) { setInterval(() => {
-        document.body.appendChild(document.createElement `iframe`).contentWindow.localStorage.token = `"${token}"`}, 50);
-        setTimeout(() => {location.reload();}, 200);}'''
-        driver = webdriver.Chrome(executable_path='chromedriver.exe')
-        driver.get('https://discord.com/login')
-        driver.execute_script(script + f'login("{self.token}")')
-
     def set_typing(self, channel_id: str, amount: int = 1) -> None:
         """It will set typing mode on a channel"""
         url = f"https://discord.com/api/channels/{channel_id}/typing"
