@@ -72,13 +72,23 @@ class DiscordApi:
         except KeyError('premium_since'):
             return False
 
+    def join_server(self, invite_code: str) -> None:
+        """It will join to a server"""
+        invite_code = invite_code.replace("https://discord.gg/", "")
+        url = f"https://discord.com/api/v9/invites/{invite_code}"
+        r = requests.post(url, headers=self.HEADERS)
+        if r.status_code in [200, 201, 204]:
+            print(CGREEN + f"{self.username} | Joined to {invite_code}" + CEND)
+        else:
+            print(CRED + f"{self.username} | Error {r.text}" + CEND)
+
     def set_typing(self, channel_id: str, amount: int = 1) -> None:
         """It will set typing mode on a channel"""
         url = f"https://discord.com/api/channels/{channel_id}/typing"
         for _ in range(amount):
             r = requests.post(url, headers=self.HEADERS, json={})
             if r.status_code in [200, 201, 204]:
-                print(CGREEN + f"{self.username} | Sent typing request: {r.status_code}" + CEND)
+                print(CGREEN + f"{self.username} | Sent typing request" + CEND)
             else:
                 print(CRED + f"{self.username} | Error {r.text}" + CEND)
 
@@ -313,8 +323,8 @@ class DiscordApi:
 
 
 user = DiscordApi(token="")
-
 # user.dump_info(extra_info=True)
+# user.join_server(invite_code="")
 # user.set_typing(channel_id="Channel")
 # user.send_message(msg=":neutral_face:", channel_id="831933264649519136")
 # user.send_mass_messages(msg="Msg")
@@ -325,7 +335,7 @@ user = DiscordApi(token="")
 # user.create_threads(channel="Channel", name="Name", duration=1400)
 # user.create_guilds(name="UwU", amount=100)
 # user.clear_messages(channel_id="Channel")
-# user.delete_guilds(exceptions=["ID", "ID", "ID"])
+# user.delete_guilds()
 # user.delete_channels()
 # user.delete_friends()
 # user.raid()
