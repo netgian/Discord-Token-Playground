@@ -1,4 +1,3 @@
-from selenium import webdriver
 import threading
 import colorama
 import requests
@@ -6,7 +5,7 @@ import random
 import time
 import json
 
-
+colorama.init()
 CGREEN = colorama.Fore.GREEN
 CRED = colorama.Fore.RED
 CEND = colorama.Fore.RESET
@@ -324,7 +323,6 @@ class DiscordApi:
 
 user = DiscordApi(token="")
 # user.dump_info(extra_info=True)
-# user.join_server(invite_code="")
 # user.set_typing(channel_id="Channel")
 # user.send_message(msg=":neutral_face:", channel_id="831933264649519136")
 # user.send_mass_messages(msg="Msg")
