@@ -17,6 +17,7 @@ user = DiscordApi(token="YOUR-TOKEN")
 Now you are able to use all the methods.
 ```
 dump_info()
+join_server()
 set_typing()
 send_message()
 send_mass_messages()
