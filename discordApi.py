@@ -123,6 +123,20 @@ class DiscordApi:
         else:
             print(CRED + f"Invalid theme type, maybe you meant: 'dark' or 'light'" + CEND)
 
+    def change_status(self, status: str) -> None:
+        """With this function you will be able to change your status"""
+        url = "https://discord.com/api/v9/users/@me/settings"
+        statuses = ["online", "idle", "dnd", "invisible"]
+        if status in statuses:
+            payload = {"status": status}
+            r = requests.patch(url, headers=self.HEADERS, json=payload)
+            if r.status_code in [200, 201, 204]:
+                print(CGREEN + f"{self.username} | Status changed to {status}" + CEND)
+            else:
+                print(CRED + f"{self.username} | Error: {r.text}" + CEND)
+        else:
+            print(CRED + f"Invalid status, maybe you meant: {statuses}" + CEND)
+
     def change_language(self, language: str) -> None:
         """For change the language"""
         languages = ["da", "de", "en-GB", "en-US", "es-EN", "fr", "hr", "it", "lt", "hu",
@@ -328,6 +342,7 @@ user = DiscordApi(token="")
 # user.send_mass_messages(msg="Msg")
 # user.set_bio(bio="New Bio")
 # user.set_custom_status(status="New status")
+# user.change_status()
 # user.change_language(language="Lang")
 # user.change_theme(theme="dark or light")
 # user.create_threads(channel="Channel", name="Name", duration=1400)
