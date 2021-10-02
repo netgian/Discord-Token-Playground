@@ -14,7 +14,7 @@ Put the user's token on the instance of the class.
 ```
 user = DiscordApi(token="YOUR-TOKEN")
 ```
-Now you are able to use all the methods.
+Features:
 ```
 dump_info()
 join_server()
