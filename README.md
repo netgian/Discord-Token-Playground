@@ -6,7 +6,7 @@ Simple Python script that automates requests to a Discord account via its token.
 ## Requirements
 First of all install the libraries at requirements.txt
 ```
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Usage.
