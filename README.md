@@ -1,5 +1,5 @@
-Discord User API
-================
+Discord Token Playground
+========================
 
 Simple Python script that automates requests to a Discord account via its token.
 
@@ -9,10 +9,10 @@ First of all install the libraries at requirements.txt
 pip3 install -r requirements.txt
 ```
 
-## Usage
-Put the user's token on the instance of the class.
+## Usage.
+Put your token here
 ```
-user = DiscordApi(token="YOUR-TOKEN")
+TOKEN = "<token-here>"
 ```
 Features:
 ```
